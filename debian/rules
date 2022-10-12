@@ -1,0 +1,56 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+PKG:=$(shell dh_listpackages)
+TMP:=$(CURDIR)/debian/$(PKG)
+EG:=$(TMP)/usr/share/doc/$(PKG)/examples
+XE_FILES:=$(wildcard /usr/share/libxml-encoding-perl/*.xml)
+ENC_FILES:=$(wildcard debian/encodings/*.enc)
+
+include /usr/share/dpkg/architecture.mk
+PERLVER := $(shell perl -MConfig -e 'print $$Config{version}')
+ARCHLIB := $(shell perl -I/usr/lib/$(DEB_HOST_MULTIARCH)/perl/cross-config-$(PERLVER) -MConfig -e 'print $$Config{vendorarch}')
+
+ENC_DOC_FILES:=$(wildcard $(TMP)/$(ARCHLIB)/XML/Parser/Encodings/*.msg) \
+	$(TMP)/$(ARCHLIB)/XML/Parser/Encodings/README
+
+%:
+	dh $@
+
+# we want to use the system version of included modules, so
+# we move the inc away and move it back afterwards
+override_dh_auto_clean:
+	dh_auto_clean
+	[ ! -d $(CURDIR)/inc.save ] || mv $(CURDIR)/inc.save $(CURDIR)/inc
+
+override_dh_auto_configure:
+	[ ! -d $(CURDIR)/inc ] || mv $(CURDIR)/inc $(CURDIR)/inc.save
+	dh_auto_configure
+
+override_dh_installexamples:
+	dh_installexamples
+	sed -i -e'1s|/usr/local/bin/perl|/usr/bin/perl|' $(EG)/canonical $(EG)/xmlcomments $(EG)/xmlstats $(EG)/xmlfilter
+
+# install Encodings/README and Encodings/*.msg as documentation
+override_dh_install:
+	dh_install
+	mkdir -p $(TMP)/usr/share/doc/$(PKG)/Encodings
+	$(foreach f,$(ENC_DOC_FILES),mv $(f) $(TMP)/usr/share/doc/$(PKG)/Encodings/;)
+
+
+override_dh_compress:
+	dh_compress -Xxmlfiltera
+
+override_dh_auto_build:
+	dh_auto_build
+	$(foreach f,$(ENC_FILES),rm -f blib/lib/XML/Parser/Encodings/$(basename $(notdir $(f))).enc;)
+	$(foreach f,$(ENC_FILES),cp $f blib/lib/XML/Parser/Encodings/;)
+
+make_encodings: /usr/share/libxml-encoding-perl
+	rm -rf debian/encodings/*
+	$(foreach f,$(XE_FILES),compile_encoding -o debian/encodings/$(basename $(notdir $(f))).enc $f;)
+
+/usr/share/libxml-encoding-perl:
+	@echo Please install libxml-encoding-perl
+	exit 1
