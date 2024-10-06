@@ -1,3 +1,22 @@
+libxml-parser-perl (2.47-1) unstable; urgency=medium
+
+  * Import upstream version 2.47.
+  * Make build dependency on libdevel-checklib-perl versioned.
+  * debian/copyright: update years of packaging copyright.
+  * debian/copyright: add copyright holder.
+  * debian/copyright: add comment regarding new LICENSE file.
+  * Declare compliance with Debian Policy 4.6.2.
+  * Update debian/upstream/metadata.
+
+ -- gregor herrmann <gregoa@debian.org>  Mon, 01 Jan 2024 23:23:27 +0100
+
+libxml-parser-perl (2.46-4) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Apply multi-arch hints. + libxml-parser-perl: Drop Multi-Arch: same.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 27 Nov 2022 13:38:48 +0000
+
 libxml-parser-perl (2.46-3) unstable; urgency=medium
 
   * debian/rules: make usage of $Config{vendorarch}
